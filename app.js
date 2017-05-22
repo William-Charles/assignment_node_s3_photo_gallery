@@ -24,7 +24,7 @@ app.use((req, res, next) => {
 // Body Parser
 // ----------------------------------------
 const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({extended: true}));
 
 // ----------------------------------------
 // Sessions/Cookies
@@ -137,11 +137,58 @@ morgan.token("data", (req, res, next) => {
   return `${data}`;
 });
 
+////
+//Passport Local
+////
+const models = require("./models");
+const User = models.User;
+var passport = require("passport");
+app.use(passport.initialize());
+app.use(passport.session());
+
+const LocalStrategy = require("passport-local").Strategy;
+passport.use(
+  new LocalStrategy(function(username, password, done) {
+    User.findOne({email: username}, function(err, user) {
+      if (err) {
+        return done(err);
+      }
+      if (!user) {
+        return done(null, false, {message: "Incorrect username."});
+      }
+      if (!user.validPassword(password)) {
+        return done(null, false, {message: "Incorrect password."});
+      }
+      return done(null, user);
+    });
+  })
+);
+
+passport.serializeUser(function(user, done) {
+  done(null, user.id);
+});
+
+passport.deserializeUser(function(id, done) {
+  User.findById(id, function(err, user) {
+    done(err, user);
+  });
+});
+
+app.post(
+  "/login",
+  passport.authenticate("local", {
+    successRedirect: "/",
+    failureRedirect: "/login"
+  })
+);
 // ----------------------------------------
 // Routes
 // ----------------------------------------
 const photosRouter = require("./routes/photos");
-app.use("/", photosRouter);
+app.use("/photos", photosRouter);
+
+const authRouter = require("./routes/auth");
+app.use("/", authRouter);
 
 // ----------------------------------------
 // Template Engine
@@ -184,7 +231,7 @@ app.use((err, req, res, next) => {
   if (err.stack) {
     err = err.stack;
   }
-  res.status(500).render("errors/500", { error: err });
+  res.status(500).render("errors/500", {error: err});
 });
 
 module.exports = app;
