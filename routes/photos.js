@@ -11,8 +11,8 @@ const FileUpload = require("./../services/file_upload");
 router.get("/", (req, res, next) => {
   Photos.find({})
     .then(photos => {
-      console.log(photos[0].photos);
-      res.render("photos/index");
+      console.log(photos);
+      res.render("photos/index", {photos: photos});
     })
     .catch(next);
 });
@@ -29,24 +29,27 @@ router.post("/", mw, (req, res, next) => {
     mimetype: req.file.mimetype
   })
     .then(data => {
-      Photos.update(
-        {},
-        {
-          $push: {
-            photos: {
-              url: data.Location,
-              uploader: req.session.passport.user,
-              desc: req.body.photo.desc
-            }
-          }
+      return Photos.create({
+        photos: {
+          url: data.Location,
+          uploader: req.session.passport.user,
+          desc: req.body.photo.desc,
+          key: req.file.key
         }
-      );
-      // User.find;
-      // return Photos.update({photos}, {$push: {photos: photoObj}});
+      });
+    })
+    .then(photo => {
       req.flash("success", "Photo created!");
       res.redirect("/photos");
     })
     .catch(next);
+});
+
+router.delete("/:id", (req, res) => {
+  console.log("id from delete", req.params.id);
+  Photos.findById(req.params.id, {_id: 0, key: 1}).then(photo => {
+    console.log("photo for delete", photo);
+  });
 });
 
 module.exports = router;

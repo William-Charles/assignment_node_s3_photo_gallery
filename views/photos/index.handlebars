@@ -9,15 +9,15 @@
   <p class="text-danger">No Photos :(</p>
 {{else }}
   <div class="row">
-    {{#each photos as |photo key| }}
+    {{#each photos as |photo|}}
       <div class="col-xs-4">
         <a
-          href="/photos/{{ photo.name }}?_method=delete"
+          href="/photos/{{ photo.photos._id }}?_method=delete"
           class="text-danger">
           &times;
         </a>
-        <p>{{ photo.name }}</p>
-        <img src="{{ photo.url }}" alt="Photo" class="img-responsive">
+        <p>{{ photo.desc }}</p>
+        <img src="{{ photo.photos.url }}" alt="Photo" class="img-responsive">
       </div>
     {{/each }}
   </div>
