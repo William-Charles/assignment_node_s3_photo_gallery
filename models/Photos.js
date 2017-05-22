@@ -10,6 +10,9 @@ const PhotosSchema = mongoose.Schema({
       uploader: {
         type: Schema.Types.ObjectId,
         ref: "User"
+      },
+      desc: {
+        type: String
       }
     }
   ]

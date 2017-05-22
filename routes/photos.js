@@ -1,31 +1,46 @@
 const express = require("express");
 const router = express.Router();
-
+const models = require("../models");
+const Photos = models.Photos;
+const User = models.User;
 const FileUpload = require("./../services/file_upload");
 
 // ----------------------------------------
 // Index
 // ----------------------------------------
-router.get(["/", "/photos"], (req, res) => {
-  // const photos = require("./../data/photos");
-
-  res.render("photos/index");
+router.get("/", (req, res, next) => {
+  Photos.find({})
+    .then(photos => {
+      console.log(photos[0].photos);
+      res.render("photos/index");
+    })
+    .catch(next);
 });
 
-router.get("/photos/new", (req, res) => {
+router.get("/new", (req, res) => {
   res.render("photos/new");
 });
 
 const mw = FileUpload.single("photo[file]");
-router.post("/photos", mw, (req, res, next) => {
-  console.log("Files", req.file);
-  console.log("user session info", req.user);
+router.post("/", mw, (req, res, next) => {
   FileUpload.upload({
     data: req.file.buffer,
     name: req.file.originalname,
     mimetype: req.file.mimetype
   })
     .then(data => {
+      Photos.update(
+        {},
+        {
+          $push: {
+            photos: {
+              url: data.Location,
+              uploader: req.session.passport.user,
+              desc: req.body.photo.desc
+            }
+          }
+        }
+      );
       // User.find;
       // return Photos.update({photos}, {$push: {photos: photoObj}});
       req.flash("success", "Photo created!");
